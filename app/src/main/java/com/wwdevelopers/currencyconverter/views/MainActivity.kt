@@ -5,6 +5,7 @@ import android.util.Log
 import android.view.View
 import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.jakewharton.rxbinding2.widget.RxTextView
@@ -56,6 +57,12 @@ class MainActivity : AppCompatActivity() {
             .doOnNext {
 
                 currencyRecyclerAdapter?.updateValues(it)
+
+                //Hide the loading animation when data is gotten
+                if( loading_animation_view.isVisible ){
+                    loading_animation_view.visibility = View.GONE
+                    loading_animation_view.pauseAnimation()
+                }
 
             }
             .subscribe()
