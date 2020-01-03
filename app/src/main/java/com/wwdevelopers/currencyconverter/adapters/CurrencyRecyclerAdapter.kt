@@ -83,14 +83,17 @@ class CurrencyRecyclerAdapter(
         holder.currency_flag_image_view.setImageResource(currency.flag!!)
 
 
-        RxView.focusChanges( holder.currency_value_edit_text ).subscribe ({
+//        RxView.focusChanges( holder.currency_value_edit_text ).subscribe ({
+        RxView.clicks( holder.currency_value_edit_text ).subscribe ({
 
             //Avoid calling the upda
-            if( it && position != ignoreEditTextFocusOonPosition ) {
-                onCurrencyEditTextFocusListener.onFocus( holder.itemView, holder.adapterPosition )
-            }else{
-                ignoreEditTextFocusOonPosition = -1
-            }
+//            if( it && position != ignoreEditTextFocusOonPosition ) {
+//                onCurrencyEditTextFocusListener.onFocus( holder.itemView, holder.adapterPosition )
+//            }else{
+//                ignoreEditTextFocusOonPosition = -1
+//            }
+
+            onCurrencyEditTextFocusListener.onFocus( holder.itemView, holder.adapterPosition )
 
 
         },{
