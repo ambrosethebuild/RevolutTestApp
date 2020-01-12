@@ -15,48 +15,67 @@ import com.wwdevelopers.currencyconverter.interfaces.EditTextFocusListener
 import com.wwdevelopers.currencyconverter.interfaces.OnItemClickListener
 import com.wwdevelopers.currencyconverter.utils.UIUtils
 import com.wwdevelopers.currencyconverter.viewModels.MainActivityViewModel
+import dagger.android.AndroidInjection
 import io.reactivex.disposables.Disposable
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.currency_item_view.view.*
+import javax.inject.Inject
 
 
 class MainActivity : AppCompatActivity() {
 
-    var currencyRecyclerAdapter: CurrencyRecyclerAdapter? = null
+    @Inject
+    lateinit var currencyRecyclerAdapter: CurrencyRecyclerAdapter
     var canListenToTouches = true
 
-    var mMainActivityViewModel: MainActivityViewModel? = null
+    @Inject
+    lateinit var mMainActivityViewModel: MainActivityViewModel
+
     private var mBaseCurrencyAmountEntryDisposable: Disposable? = null
 
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
+        //DI Injection
+        AndroidInjection.inject(this)
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         initRecyclerView()
 
+
     }
 
+    override fun onStart() {
+        super.onStart()
+        mMainActivityViewModel.onStart()
+    }
 
+    override fun onStop() {
+        super.onStop()
+        mMainActivityViewModel.onStop()
+    }
 
 
 
     private fun initRecyclerView() {
 
-        mMainActivityViewModel = MainActivityViewModel()
-        currencyRecyclerAdapter = CurrencyRecyclerAdapter( onCurrencyItemClickListener, onCurrencyEditTextFocusListener )
+
+        currencyRecyclerAdapter.setBaseItemClickListener( onCurrencyItemClickListener )
+        currencyRecyclerAdapter.setBaseEditTextFocusListener( onCurrencyEditTextFocusListener )
+
 
 
         currency_recycler_view.layoutManager = LinearLayoutManager(this)
         currency_recycler_view.adapter = currencyRecyclerAdapter
 
-        currencyRecyclerAdapter?.setBaseCurrencySubject( mMainActivityViewModel!!.getBaseCurrencySubject() )
 
-        mMainActivityViewModel!!.getCurrenciesSubject()
+        mMainActivityViewModel.getCurrenciesSubject()
             .doOnNext {
 
-                currencyRecyclerAdapter?.updateValues(it)
+                currencyRecyclerAdapter.updateValues(it)
 
                 //Hide the loading animation when data is gotten
                 if( loading_animation_view.isVisible ){
@@ -96,17 +115,6 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    override fun onStart() {
-        super.onStart()
-        mMainActivityViewModel!!.onStart()
-    }
-
-    override fun onStop() {
-        super.onStop()
-        mMainActivityViewModel!!.onStop()
-    }
-
-
 
     val onCurrencyItemClickListener = object: OnItemClickListener{
 
@@ -143,22 +151,34 @@ class MainActivity : AppCompatActivity() {
 
     fun updateRecyclerViewItem( position: Int ){
 
-        currencyRecyclerAdapter?.updateBaseCurrency(position).let {
+        //update the base currency value and move the selected item from current position too top of list
+        val currency = currencyRecyclerAdapter.mCurrencies[position]
 
-            currency_recycler_view.scrollToPosition(0)
-            setupAmountValueChangeListener(
-                currency_recycler_view.findViewHolderForAdapterPosition(
-                    0
-                )!!.itemView
-            )
+        mMainActivityViewModel.getBaseCurrencySubject().onNext( currency )
 
+
+        try {
+            currencyRecyclerAdapter.notifyItemMoved(position, 0)
+        }catch ( ex: java.lang.Exception){
+            ex.printStackTrace()
         }
+
+
+        currency_recycler_view.scrollToPosition(0)
+        setupAmountValueChangeListener(
+            currency_recycler_view.findViewHolderForAdapterPosition(
+                0
+            )!!.itemView
+        )
+
+
+
 
     }
 
     private fun setupAmountValueChangeListener( viewHolder: View ){
 
-        val mBaseCurrency = mMainActivityViewModel!!.getBaseCurrencySubject()
+        val mBaseCurrency = mMainActivityViewModel.getBaseCurrencySubject()
         //remove any previous disposable
         mBaseCurrencyAmountEntryDisposable?.dispose()
         mBaseCurrencyAmountEntryDisposable = RxTextView.textChanges( viewHolder.currency_value_edit_text ).subscribe { text ->

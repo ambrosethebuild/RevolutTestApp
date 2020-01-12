@@ -14,11 +14,14 @@ import io.reactivex.disposables.Disposable
 import io.reactivex.subjects.BehaviorSubject
 import org.json.JSONObject
 import java.util.*
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlin.collections.ArrayList
 
-class CurrencyRepository {
 
-    private var instance: CurrencyRepository? = null
+@Singleton
+class CurrencyRepository @Inject constructor(){
+
 
     private var mCurrenciesSubject = BehaviorSubject.create<ArrayList<Currency>>()
     private var mPreviousBaseCurrencyCodes = BehaviorSubject.create<String>()
@@ -28,31 +31,15 @@ class CurrencyRepository {
 
 
 
-
-    //Singleton pattern
-    fun getInstance(): CurrencyRepository{
-
-        if( instance == null ){
-            instance = CurrencyRepository()
-        }
-
-        return instance as CurrencyRepository
-
-    }
-
-
     //Getting data from API endpoint
     fun getCurrenciesRatesFromAPI(baseCurrencyCode: String){
 
         //get the rates from API
         APIRequests().currenciesRateRequest( baseCurrencyCode, currenciesRateRequestJSONObjectRequestListener )
 
-//        Log.e("API Called","Yes")
-//        Log.e("API Called Base",baseCurrencyCode)
-
     }
 
-    val currenciesRateRequestJSONObjectRequestListener = object: JSONObjectRequestListener{
+    private val currenciesRateRequestJSONObjectRequestListener = object: JSONObjectRequestListener{
 
         @SuppressLint("NewApi")
         override fun onResponse(response: JSONObject?) {

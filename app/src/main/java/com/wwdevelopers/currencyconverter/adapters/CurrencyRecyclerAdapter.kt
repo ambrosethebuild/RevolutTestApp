@@ -15,22 +15,30 @@ import com.wwdevelopers.currencyconverter.utils.format
 import io.reactivex.subjects.BehaviorSubject
 import kotlinx.android.synthetic.main.currency_item_view.view.*
 import java.lang.Exception
+import javax.inject.Inject
 
-class CurrencyRecyclerAdapter(
-    val onItemClickListener: OnItemClickListener,
-    val onCurrencyEditTextFocusListener: EditTextFocusListener
-): RecyclerView.Adapter<CurrencyRecyclerAdapter.ViewHolder>() {
+class CurrencyRecyclerAdapter @Inject constructor(): RecyclerView.Adapter<CurrencyRecyclerAdapter.ViewHolder>() {
 
-    private var mCurrencies: ArrayList<Currency> = ArrayList()
-    private var mBaseCurrencySubject = BehaviorSubject.create<Currency>()
+    private lateinit var onItemClickListener: OnItemClickListener
+    private lateinit var onCurrencyEditTextFocusListener: EditTextFocusListener
+
+    var mCurrencies: ArrayList<Currency> = ArrayList()
 
     var firstTimeLoadingData = true
     var ignoreEditTextFocusOonPosition = -1
 
 
-    fun setBaseCurrencySubject(baseCurrencySubject: BehaviorSubject<Currency>) {
-        mBaseCurrencySubject = baseCurrencySubject
+    fun setBaseItemClickListener( onItemClickListener: OnItemClickListener ) {
+        this.onItemClickListener = onItemClickListener
     }
+
+    fun setBaseEditTextFocusListener( onCurrencyEditTextFocusListener: EditTextFocusListener ) {
+        this.onCurrencyEditTextFocusListener = onCurrencyEditTextFocusListener
+    }
+
+
+
+
 
     fun updateValues(currencies: ArrayList<Currency>) {
 
@@ -116,19 +124,6 @@ class CurrencyRecyclerAdapter(
     }
 
 
-    fun updateBaseCurrency( position: Int ){
-
-        //update the base currency value and move the selected item from current position too top of list
-        val currency = mCurrencies[position]
-        mBaseCurrencySubject.onNext(currency)
-
-        try {
-            notifyItemMoved(position, 0)
-        }catch ( ex: Exception ){
-            ex.printStackTrace()
-        }
-
-    }
 
 
 

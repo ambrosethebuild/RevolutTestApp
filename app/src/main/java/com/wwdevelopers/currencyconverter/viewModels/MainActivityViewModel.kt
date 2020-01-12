@@ -14,15 +14,15 @@ import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 import org.reactivestreams.Subscription
 import java.util.concurrent.TimeUnit
+import javax.inject.Inject
 
 
-class MainActivityViewModel: ViewModel() {
+class MainActivityViewModel @Inject constructor( private val mCurrencyRepository: CurrencyRepository ): ViewModel(){
 
 
-    var mCurrencyRepository: CurrencyRepository = CurrencyRepository().getInstance()
-
-    private val apiCallDelay = 1L
-    private var mCurrenciesListDisposable: Disposable? = null
+//    var mCurrencyRepository: CurrencyRepository = CurrencyRepository().getInstance()
+//    @Inject
+//    lateinit var mCurrencyRepository: CurrencyRepository
 
     private val mDisposables = CompositeDisposable()
 
@@ -33,7 +33,6 @@ class MainActivityViewModel: ViewModel() {
 
 
 
-
     init {
 
         initBaseCurrencySubject()
@@ -41,6 +40,8 @@ class MainActivityViewModel: ViewModel() {
         mCurrencyRepository.setPreviousBaseCurrencySubject( mPreviousBaseCurrencyCodes )
 
     }
+
+
 
     private fun initBaseCurrencySubject() {
 
@@ -66,27 +67,34 @@ class MainActivityViewModel: ViewModel() {
 
     fun onStart() {
 
-        mDisposables.add(
-            Observable.interval(
+        val mDisposable = Observable.interval(
             0, 1, TimeUnit.SECONDS
             )
             .observeOn(AndroidSchedulers.mainThread())
-                .subscribeOn( Schedulers.io() )
+            .subscribeOn( Schedulers.io() )
             .subscribe {
 
                 mCurrencyRepository.getCurrenciesRatesFromAPI( getBaseCurrency().code!! )
 
             }
 
-        )
+
+        mDisposables.add(mDisposable)
+
+
+
 
     }
 
-    fun onStop() {
+    fun onStop(){
+        //Clear disposables, so no process would be running when user isn't even using the app
+        mDisposables.clear()
 
-        //mCurrenciesListDisposable?.dispose()
+    }
+
+    override fun onCleared() {
+        super.onCleared()
         mDisposables.dispose()
-
     }
 
 
